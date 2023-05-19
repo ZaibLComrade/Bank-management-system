@@ -6,27 +6,32 @@
 #define NameLength 16
 #define PassLength 64
 
+
+// Prompts for username and passord
 void prompt() {
     char username[NameLength];
     char password[PassLength];
-    printf("Enter Username:\n");
+    printf("Enter Username: ");
     scanf("%s", username);
-    printf("Enter Password\n");
+    printf("Enter Password: ");
     scanf("%s", password);
 }
 
 void customerPrompt(void) {
-    printf("Customer login:\n");
+    printf("Customer login\n");
+    printf("==============\n");
     prompt();
 }
 
 void managerPrompt() {
-    printf("Manager login:\n");
+    printf("Manager login\n");
+    printf("=============\n");
     prompt();
 }
 
 void adminPrompt() {
-    printf("Admin login:\n");
+    printf("Admin login\n");
+    printf("===========\n");
     prompt();
 }
 
