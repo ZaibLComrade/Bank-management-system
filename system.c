@@ -9,22 +9,7 @@
 // Req -> Feature that is not yet added but will be worked
 // on a future version
 
-void loginPage(int accType) {
-    char username[StrLen];
-    // Req: Username validation
-    char password[PassLength];
-    // Req: Password encryption
-    // Req: Password validity   
-
-    // Prompts for username and passord
-    void login() {
-        printf("Enter Username: ");
-        scanf("%s", username);
-        printf("Enter Password: ");
-        scanf("%s", password);
-    }
-    // If account is not created
-    void createAccount() {
+void createAccount() {
         // Initializing varaibles
         char firstName[StrLen];
         char lastName[StrLen];
@@ -64,8 +49,34 @@ void loginPage(int accType) {
         strcat(name, " ");
         strcat(name, lastName);
 
-        // 
+
+        //bug: Working with files profeciency required
+        FILE *out = fopen("userData.txt", "w");
+        fprintf(out, "Name, Username, Email, Password, Phone");
+        fprintf(out, "\n");
+        fprintf(out, "%s, ", name);
+        fprintf(out, "%s, ", newUsername);
+        fprintf(out, "%s, ", email);
+        fprintf(out, "%s, ", newPassword);
+        fprintf(out, "%s, ", phoneNumber);
     }
+
+void loginPage() {
+    char username[StrLen];
+    // Req: Username validation
+    char password[PassLength];
+    // Req: Password encryption
+    // Req: Password validity   
+
+    // Prompts for username and passord
+    void login() {
+        printf("Enter Username: ");
+        scanf("%s", username);
+        printf("Enter Password: ");
+        scanf("%s", password);
+    }
+    // If account is not created
+    
     // Asks whether account exists
     void login_or_create() {
         int exist;
@@ -79,34 +90,24 @@ void loginPage(int accType) {
         if(exist) login();
         else createAccount();
     }
-   
-    void customerPrompt(void) {
-        printf("Customer login\n");
-        printf("==============\n");
-        login_or_create();
-    }
-    void managerPrompt() {
-        printf("Manager login\n");
-        printf("=============\n");
-        login_or_create();
-    }
-    void adminPrompt() {
-        printf("Admin loginPage\n");
-        printf("===========\n");
-        login_or_create();
-    }
 
-    // Prompts login based on account type selected in menu
-    switch(accType) {
-        case 1: 
-            customerPrompt();
-            break;
-        case 2: 
-            managerPrompt();
-            break;
-        case 3: 
-            adminPrompt();
-    }
+    login_or_create();
+}
+
+void customerPrompt(void) {
+    printf("Customer login\n");
+    printf("==============\n");
+    loginPage();
+}
+void managerPrompt(void) {
+    printf("Manager login\n");
+    printf("=============\n");
+    loginPage();
+}
+void adminPrompt(void) {
+    printf("Admin login\n");
+    printf("===========\n");
+    loginPage();
 }
 
 // Starting up main menu
@@ -131,5 +132,17 @@ int menu(void) {
 
 int main(void) {
     int accType = menu();
-    loginPage(accType);
+    // Prompts login based on account type selected in menu
+    switch(accType) {
+        case 1: 
+            customerPrompt();
+            break;
+        case 2: 
+            managerPrompt();
+            break;
+        case 3: 
+            adminPrompt();
+            break;
+    }
+    
 }
