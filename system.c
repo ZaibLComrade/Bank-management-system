@@ -6,6 +6,15 @@
 #define StrLen 32
 #define PassLength 64
 
+typedef struct node {
+    char *name;
+    char *username;
+    char *email;
+    char *password;
+    char *phone;
+    // struct node *next;
+} Node, *NodePtr;
+
 // Req -> Feature that is not yet added but will be worked
 // on a future version
 
@@ -67,9 +76,9 @@ void createAccount() {
 // Shows login page after choosing user type
 // Not added: Checks whether account exists
 void loginPage() {
-    static char username[StrLen];
+    char username[StrLen];
     // Req: Username validation
-    static char password[PassLength];
+    char password[PassLength];
     // Req: Password encryption
     // Req: Password validity  
 
@@ -79,6 +88,9 @@ void loginPage() {
         scanf("%s", username);
         printf("Enter Password: ");
         scanf("%s", password);
+        printf("\n");
+
+        // A search must be performed into database
     }
     // If account is not created
     
@@ -99,29 +111,68 @@ void loginPage() {
     login_or_create();
 }
 
-// First UI after customer logs in
-// void customerDashboard() {
-    
-// }
-
+// Under Construction
+void customerDashboard() {
+    printf("Hello /User/\n");
+    printf("Current balance:\n");
+    printf("\n");
+    printf("Options:\n");
+    printf("1. Change Password\n");
+    printf("2. Deposit\n");
+    printf("3. Withdraw\n");
+    printf("4. Send Money\n");
+    printf("5. View Transaction History\n");
+    printf("6. Update Account Details\n");
+    printf("\n");
+}
 // Runs when account type chosen is customer at menu
 void customerPrompt(void) {
     printf("Customer login\n");
     printf("==============\n");
     loginPage();
-    // customerDashboard();
+    customerDashboard();
+}
+
+// Under Construction
+void managerDashboard() {
+    printf("Hello /Manager/\n");
+    printf("Options:\n");
+    printf("\n");
+    printf("1. View Customer Details\n");
+    // Update customer details
+    // Function to search customer name;
+    printf("2. Create New User Account\n");
+    printf("3. Update Account Details\n");
+    printf("4. Change Password\n");
+    printf("\n");
 }
 // Runs when account type chosen is manager at menu
 void managerPrompt(void) {
     printf("Manager login\n");
     printf("=============\n");
     loginPage();
+    managerDashboard();
+}
+
+// Under Construction
+void adminDashboard() {
+    printf("Hello /Admin/\n");
+    printf("Options:\n");
+    printf("\n");
+    printf("1. View Branch Details\n");
+    printf("2. View Customer Details\n");
+    printf("3. View Manager Details\n");
+    printf("4. View Account Details\n");
+    printf("5. Update Account Details\n");
+    printf("6. View Transaction Log\n");
+    printf("\n");
 }
 // Runs when account type chosen is admin at menu
 void adminPrompt(void) {
     printf("Admin login\n");
     printf("===========\n");
     loginPage();
+    adminDashboard();
 }
 
 // Starting up main menu
@@ -144,15 +195,6 @@ int menu(void) {
     return accType;
 }
 
-typedef struct node {
-    char *name;
-    char *username;
-    char *email;
-    char *password;
-    char *phone;
-    // struct node *next;
-} Node, *NodePtr;
-
 // void loadData(FILE *in) {
 //     NodePtr makeNode() {
 //         NodePtr newNode = (NodePtr) malloc(sizeof(Node));
@@ -167,12 +209,7 @@ int main(void) {
     // Prompts login based on account type selected in menu 
     
     // Test: assume one user account exists
-    static Node user;
-    user.name = "Zaib Khan";
-    user.username = "zaibkhan";
-    user.email = "kmjahanzaib@gmail.com";
-    user.password = "123";
-    user.phone = "019";
+
 
 
     switch(accType) {
