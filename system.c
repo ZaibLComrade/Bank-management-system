@@ -54,19 +54,12 @@ void createAccount() {
     printf("Enter phone number: ");
     scanf("%s", phoneNumber);
 
-
-    // Forming full name
-    char name[StrLen];
-    strcpy(name, firstName);
-    strcat(name, " ");
-    strcat(name, lastName);
-
-
     //bug: Working with files profeciency required
     FILE *out = fopen("userData.txt", "w");
-    fprintf(out, "Name, Username, Email, Password, Phone");
+    fprintf(out, "First Name, Last Name, Username, Email, Password, Phone,");
     fprintf(out, "\n");
-    fprintf(out, "%s, ", name);
+    fprintf(out, "%s, ", firstName);
+    fprintf(out, "%s, ", lastName);
     fprintf(out, "%s, ", newUsername);
     fprintf(out, "%s, ", email);
     fprintf(out, "%s, ", newPassword);

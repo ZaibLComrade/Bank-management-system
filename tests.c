@@ -39,8 +39,8 @@ void createAccount() {
     printf("Enter phone number: ");
     scanf("%s", phoneNumber);
 
-    FILE *out = fopen("userData.txt", "w");
     //bug: Working with files profeciency required
+    FILE *out = fopen("userData.txt", "w");
     fprintf(out, "First Name, Last Name, Username, Email, Password, Phone,");
     fprintf(out, "\n");
     fprintf(out, "%s, ", firstName);
@@ -49,6 +49,7 @@ void createAccount() {
     fprintf(out, "%s, ", email);
     fprintf(out, "%s, ", newPassword);
     fprintf(out, "%s, ", phoneNumber);
+    fclose(out);
 }
 
 typedef struct user {
@@ -92,7 +93,7 @@ User readUser(FILE *in) {
 }
 
 void printUserInfo(User var) {
-    char *name;
+    char name[StrLen];
     strcpy(name, var.firstName);
     strcat(name, " ");
     strcat(name, var.lastName);
@@ -105,11 +106,11 @@ void printUserInfo(User var) {
 }
 
 int main(void) {
+    createAccount();
     FILE *in = fopen("userData.txt", "r");
-    // createAccount(out);
-
-    // printf("Hello world\n");
     User uVoid = readUser(in);
     User u1 = readUser(in);
     printUserInfo(u1);
+
+    fclose(in)
 }
