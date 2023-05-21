@@ -36,7 +36,7 @@ void createAccount() {
     printf("Last name: ");
     scanf("%s", lastName);
     printf("Choose username: ");
-    scanf("%s", &newUsername);
+    scanf("%s", newUsername);
     printf("Email Address: ");
     scanf("%s", email);
 
