@@ -1,2 +1,4 @@
-Name, Username, Email, Password, Phone
-123 13, 1, 1, 1, 1, 
+First Name, Last Name, Username, Email, Password, Phone,
+Zaib, Khan, zaibkhan, 123, 123, 019,
+Voldemort, Potter, ladyvolda, 444, 444, 018,
+Isaac, Stratvert, isaacfoster, 1234, 1234, 017

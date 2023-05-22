@@ -5,15 +5,16 @@
 
 #define StrLen 32
 #define PassLength 64
+#define DBLen 16
 
-typedef struct node {
-    char *name;
-    char *username;
-    char *email;
-    char *password;
-    char *phone;
-    // struct node *next;
-} Node, *NodePtr;
+typedef struct user {
+    char firstName[StrLen];
+    char lastName[StrLen];
+    char username[StrLen];
+    char password[StrLen];
+    char email[StrLen];
+    char phone[StrLen];
+} User;
 
 // Req -> Feature that is not yet added but will be worked
 // on a future version
@@ -23,54 +24,44 @@ typedef struct node {
 // Accessible in manager and admin login page
 void createAccount() {
     // Initializing varaibles
-    char firstName[StrLen];
-    char lastName[StrLen];
-    char newUsername[StrLen];
-    char newPassword[PassLength];
-    char email[StrLen];
-    char phoneNumber[StrLen];
+    User temp;
 
     // Prompt user for details
     printf("First name: ");
-    scanf("%s", firstName);
+    scanf("%s", temp.firstName);
     printf("Last name: ");
-    scanf("%s", lastName);
+    scanf("%s", temp.lastName);
     printf("Choose username: ");
-    scanf("%s", newUsername);
+    scanf("%s", temp.username);
     printf("Email Address: ");
-    scanf("%s", email);
+    scanf("%s", temp.email);
 
     // Promp for password while both entry doesn't match
     int notMatch;
     do {
         printf("New password: ");
-        scanf("%s", newPassword);
+        scanf("%s", temp.password);
         char tempPass[PassLength];
         printf("Repeat password: ");
         scanf("%s", tempPass);
-        notMatch = strcmp(newPassword, tempPass);
+        notMatch = strcmp(temp.password, tempPass);
         if(notMatch) printf("Passwords don't match. Please try again\n");
     } while(notMatch);
     printf("Enter phone number: ");
-    scanf("%s", phoneNumber);
-
-
-    // Forming full name
-    char name[StrLen];
-    strcpy(name, firstName);
-    strcat(name, " ");
-    strcat(name, lastName);
+    scanf("%s", temp.phone);
 
 
     //bug: Working with files profeciency required
     FILE *out = fopen("userData.txt", "w");
-    fprintf(out, "Name, Username, Email, Password, Phone");
+    fprintf(out, "First Name, Last Name, Username, Email, Password, Phone,");
     fprintf(out, "\n");
-    fprintf(out, "%s, ", name);
-    fprintf(out, "%s, ", newUsername);
-    fprintf(out, "%s, ", email);
-    fprintf(out, "%s, ", newPassword);
-    fprintf(out, "%s, ", phoneNumber);
+    fprintf(out, "%s, ", temp.firstName);
+    fprintf(out, "%s, ", temp.lastName);
+    fprintf(out, "%s, ", temp.username);
+    fprintf(out, "%s, ", temp.email);
+    fprintf(out, "%s, ", temp.password);
+    fprintf(out, "%s, ", temp.phone);
+    fclose(out);
 }
 
 // Shows login page after choosing user type
@@ -195,33 +186,85 @@ int menu(void) {
     return accType;
 }
 
-// void loadData(FILE *in) {
-//     NodePtr makeNode() {
-//         NodePtr newNode = (NodePtr) malloc(sizeof(Node));
-//     }
-// }
+
+//Load Database
+int getString(FILE *in, char str[]) {
+    char ch;
+    char delim = ',';
+    int i = 0;
+    str[i] = '\0';
+    while(isspace(ch = getc(in)));
+    if(ch == EOF) return 1;
+    do {
+        str[i++] = ch;
+    } while((ch = getc(in)) != delim && ch != EOF);
+    str[i] = '\0';
+    return 0; // Return type checks wheather end of file reached
+}
+User readUser(FILE *in) {
+    User temp;
+    int isEOF = 0;
+    isEOF = getString(in, temp.firstName);
+    getString(in, temp.lastName);
+    getString(in, temp.username);
+    getString(in, temp.email);
+    getString(in, temp.password);
+    getString(in, temp.phone);
+    if(isEOF) strcpy(temp.firstName, "END");
+    return temp;
+}
+void printUserInfo(User var) {
+    char name[StrLen];
+    strcpy(name, var.firstName);
+    strcat(name, " ");
+    strcat(name, var.lastName);
+
+    // printf("First Name: %s\n", var.firstName);
+    // printf("Last Name: %s\n", var.lastName);
+    printf("Name: %s\n", name);
+    printf("Username: %s\n", var.username);
+    printf("Email: %s\n", var.email);
+    printf("password: %s\n", var.password);
+    printf("Phone: %s\n", var.phone);
+}
+void loadData(User database[]) {
+    FILE *in = fopen("userData.txt", "r");
+    int count = 0;
+    readUser(in); // Reading Table heads as void
+
+    User temp;
+    do {
+        temp = readUser(in);
+        database[count++] = temp;
+    } while(strcmp(temp.firstName, "END")); // END of data value
+}
 
 int main(void) {
-    // FILE *in = fopen("userData", "r");
+    FILE *in = fopen("userData.txt", "r");
+    User database[DBLen];
+    loadData(database);
+
+    int i = 0;
+    while(strcmp(database[i].firstName, "END")) {
+        printUserInfo(database[i++]);
+        printf("\n");
+    }
+
     // loadData(in);
 
-    int accType = menu();
+    // int accType = menu();
     // Prompts login based on account type selected in menu 
-    
-    // Test: assume one user account exists
 
-
-
-    switch(accType) {
-        case 1: 
-            customerPrompt();
-            break;
-        case 2: 
-            managerPrompt();
-            break;
-        case 3: 
-            adminPrompt();
-            break;
-    }
+    // switch(accType) {
+    //     case 1: 
+    //         customerPrompt();
+    //         break;
+    //     case 2: 
+    //         managerPrompt();
+    //         break;
+    //     case 3: 
+    //         adminPrompt();
+    //         break;
+    // }
     
 }
