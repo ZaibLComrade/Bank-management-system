@@ -6,15 +6,6 @@
 #define StrLen 32
 #define PassLength 64
 
-typedef struct user {
-    char *firstName;
-    char *lastName;
-    char *username;
-    char *password;
-    char *email;
-    char *phone;
-} User;
-
 void createAccount() {
     // Initializing varaibles
     char firstName[StrLen];
@@ -60,18 +51,14 @@ void createAccount() {
     fprintf(out, "%s, ", phoneNumber);
 }
 
-void printUserInfo(User var) {
-    char *name;
-    strcpy(name, var.firstName);
-    strcat(name, " ");
-    strcat(name, var.lastName);
-
-    printf("Name: %s\n", name);
-    printf("Username: %s\n", var.username);
-    printf("Email: %s\n", var.email);
-    printf("Password: %s\n", var.password);
-    printf("Phone: %s\n", var.phone);
-}
+typedef struct user {
+    char firstName[StrLen];
+    char lastName[StrLen];
+    char username[StrLen];
+    char password[StrLen];
+    char email[StrLen];
+    char phone[StrLen];
+} User;
 
 void getString(FILE *in, char str[]) {
     char ch;
@@ -88,20 +75,41 @@ void getString(FILE *in, char str[]) {
 
 User readUser(FILE *in) {
     User temp;
-    getString(in, temp.firstName);
-    getString(in, temp.lastName);
-    getString(in, temp.username);
-    getString(in, temp.email);
-    getString(in, temp.password);
-    getString(in, temp.phone);
+    char tempStr[StrLen];
+    getString(in, tempStr);
+    strcpy(temp.firstName, tempStr);
+    getString(in, tempStr);
+    strcpy(temp.lastName, tempStr);
+    getString(in, tempStr);
+    strcpy(temp.username, tempStr);
+    getString(in, tempStr);
+    strcpy(temp.email, tempStr);
+    getString(in, tempStr);
+    strcpy(temp.password, tempStr);
+    getString(in, tempStr);
+    strcpy(temp.phone, tempStr);
     return temp;   
+}
+
+void printUserInfo(User var) {
+    char *name;
+    strcpy(name, var.firstName);
+    strcat(name, " ");
+    strcat(name, var.lastName);
+
+    printf("Name: %s\n", name);
+    printf("Username: %s\n", var.username);
+    printf("Email: %s\n", var.email);
+    printf("Password: %s\n", var.password);
+    printf("Phone: %s\n", var.phone);
 }
 
 int main(void) {
     FILE *in = fopen("userData.txt", "r");
     // createAccount(out);
 
-    printf("Hello world\n");
+    // printf("Hello world\n");
+    User uVoid = readUser(in);
     User u1 = readUser(in);
     printUserInfo(u1);
 }
