@@ -19,6 +19,57 @@ typedef struct user {
 // Req -> Feature that is not yet added but will be worked
 // on a future version
 
+//Load Database
+int getString(FILE *in, char str[]) {
+    char ch;
+    char delim = ',';
+    int i = 0;
+    str[i] = '\0';
+    while(isspace(ch = getc(in)));
+    if(ch == EOF) return 1;
+    do {
+        str[i++] = ch;
+    } while((ch = getc(in)) != delim && ch != EOF && ch != '\n');
+    str[i] = '\0';
+    return 0; // Return type checks wheather end of file reached
+}
+User readUser(FILE *in) {
+    User temp;
+    int isEOF = 0;
+    isEOF = getString(in, temp.firstName);
+    getString(in, temp.lastName);
+    getString(in, temp.username);
+    getString(in, temp.email);
+    getString(in, temp.password);
+    getString(in, temp.phone);
+    if(isEOF) strcpy(temp.firstName, "END");  // End of file info
+    return temp;
+}
+void printUserInfo(User var) {
+    char name[StrLen];
+    strcpy(name, var.firstName);
+    strcat(name, " ");
+    strcat(name, var.lastName);
+
+    // printf("First Name: %s\n", var.firstName);
+    // printf("Last Name: %s\n", var.lastName);
+    printf("Name: %s\n", name);
+    printf("Username: %s\n", var.username);
+    printf("Email: %s\n", var.email);
+    printf("password: %s\n", var.password);
+    printf("Phone: %s\n", var.phone);
+}
+void loadData(User database[]) {
+    FILE *in = fopen("userData.csv", "r");
+    int count = 0;
+    readUser(in); // Reading Table heads as void
+
+    User temp;
+    do {
+        temp = readUser(in);
+        database[count++] = temp;
+    } while(strcmp(temp.firstName, "END")); // END of data value
+}
 
 // Creates user account at login page
 // Accessible in manager and admin login page
@@ -50,17 +101,31 @@ void createAccount() {
     printf("Enter phone number: ");
     scanf("%s", temp.phone);
 
+    FILE *check = fopen("userData.csv", "r");
+    int appendMode = 0;
+    char ch;
+    /* 
+        Check if file is pre-exixsted
+        If file exists, open file in append mode
+        If not, create file and open in write mode
+        Creating new file will add table header at the beginning of file 
+    */
+    if((ch = getc(check)) != EOF) appendMode = 1;
+    fclose(check);
 
-    //bug: Working with files profeciency required
-    FILE *out = fopen("userData.txt", "w");
-    fprintf(out, "First Name, Last Name, Username, Email, Password, Phone,");
+    FILE *out;
+    if(appendMode) out = fopen("userData.csv", "a");
+    else out = fopen("userData.csv", "w");
+    if(!appendMode) {
+        fprintf(out, "First Name,Last Name,Username,Email,Password,Phone");
+    }
     fprintf(out, "\n");
-    fprintf(out, "%s, ", temp.firstName);
-    fprintf(out, "%s, ", temp.lastName);
-    fprintf(out, "%s, ", temp.username);
-    fprintf(out, "%s, ", temp.email);
-    fprintf(out, "%s, ", temp.password);
-    fprintf(out, "%s, ", temp.phone);
+    fprintf(out, "%s,", temp.firstName);
+    fprintf(out, "%s,", temp.lastName);
+    fprintf(out, "%s,", temp.username);
+    fprintf(out, "%s,", temp.email);
+    fprintf(out, "%s,", temp.password);
+    fprintf(out, "%s", temp.phone);
     fclose(out);
 }
 
@@ -90,11 +155,12 @@ void loginPage() {
         int exist;
         printf("1. Sign Up\n");
         printf("2. Login\n");
+        printf("0. Exit\n");
         printf("Select: ");
         scanf("%d", &exist);
+        if(!exist) exit(1);
         exist -= 1; //Converting to boolean value
         printf("\n");
-
         if(exist) login();
         else createAccount();
     }
@@ -102,64 +168,65 @@ void loginPage() {
     login_or_create();
 }
 
-// Under Construction
-void customerDashboard() {
-    printf("Hello /User/\n");
-    printf("Current balance:\n");
-    printf("\n");
-    printf("Options:\n");
-    printf("1. Change Password\n");
-    printf("2. Deposit\n");
-    printf("3. Withdraw\n");
-    printf("4. Send Money\n");
-    printf("5. View Transaction History\n");
-    printf("6. Update Account Details\n");
-    printf("\n");
-}
-// Runs when account type chosen is customer at menu
 void customerPrompt(void) {
+    // Under Construction
+    void customerDashboard() {
+        printf("Hello /User/\n");
+        printf("Current balance:\n");
+        printf("\n");
+        printf("Options:\n");
+        printf("1. Change Password\n");
+        printf("2. Deposit\n");
+        printf("3. Withdraw\n");
+        printf("4. Send Money\n");
+        printf("5. View Transaction History\n");
+        printf("6. Update Account Details\n");
+        printf("7. Logout\n");
+        printf("0. Exit\n");
+        printf("\n");
+    }
     printf("Customer login\n");
     printf("==============\n");
     loginPage();
     customerDashboard();
 }
-
-// Under Construction
-void managerDashboard() {
-    printf("Hello /Manager/\n");
-    printf("Options:\n");
-    printf("\n");
-    printf("1. View Customer Details\n");
-    // Update customer details
-    // Function to search customer name;
-    printf("2. Create New User Account\n");
-    printf("3. Update Account Details\n");
-    printf("4. Change Password\n");
-    printf("\n");
-}
-// Runs when account type chosen is manager at menu
 void managerPrompt(void) {
+    // Under Construction
+    void managerDashboard() {
+        printf("Hello /Manager/\n");
+        printf("Options:\n");
+        printf("\n");
+        printf("1. View Customer Details\n");
+        // Update customer details
+        // Function to search customer name;
+        printf("2. Create New User Account\n");
+        printf("3. Update Account Details\n");
+        printf("4. Change Password\n");
+        printf("5. Logout\n");
+        printf("0. Exit\n");
+        printf("\n");
+    }
     printf("Manager login\n");
     printf("=============\n");
     loginPage();
     managerDashboard();
 }
-
-// Under Construction
-void adminDashboard() {
-    printf("Hello /Admin/\n");
-    printf("Options:\n");
-    printf("\n");
-    printf("1. View Branch Details\n");
-    printf("2. View Customer Details\n");
-    printf("3. View Manager Details\n");
-    printf("4. View Account Details\n");
-    printf("5. Update Account Details\n");
-    printf("6. View Transaction Log\n");
-    printf("\n");
-}
-// Runs when account type chosen is admin at menu
 void adminPrompt(void) {
+    // Under Construction
+    void adminDashboard() {
+        printf("Hello /Admin/\n");
+        printf("Options:\n");
+        printf("\n");
+        printf("1. View Branch Details\n");
+        printf("2. View Customer Details\n");
+        printf("3. View Manager Details\n");
+        printf("4. View Account Details\n");
+        printf("5. Update Account Details\n");
+        printf("6. View Transaction Log\n");
+        printf("7. Logout\n");
+        printf("0. Exit\n");
+        printf("\n");
+    }
     printf("Admin login\n");
     printf("===========\n");
     loginPage();
@@ -173,98 +240,39 @@ int menu(void) {
     printf("1. Customer\n");
     printf("2. Manager\n");
     printf("3. Admin\n");
+    printf("0. Exit\n");
     int accType; // Type of chosen account
     int invalid; // Checks whether user unput is valid
     do {
         // Prompts user for account type while input is not valid
         printf("Type: ");
         scanf("%d", &accType);
-        invalid = (accType < 1 || accType > 3);
+        invalid = (accType < 0 || accType > 3);
         if(invalid) printf("Not a valid type. please try again.\n");
     } while(invalid);
     printf("\n");
+    if(!accType) exit(1);
     return accType;
 }
 
-
-//Load Database
-int getString(FILE *in, char str[]) {
-    char ch;
-    char delim = ',';
-    int i = 0;
-    str[i] = '\0';
-    while(isspace(ch = getc(in)));
-    if(ch == EOF) return 1;
-    do {
-        str[i++] = ch;
-    } while((ch = getc(in)) != delim && ch != EOF);
-    str[i] = '\0';
-    return 0; // Return type checks wheather end of file reached
-}
-User readUser(FILE *in) {
-    User temp;
-    int isEOF = 0;
-    isEOF = getString(in, temp.firstName);
-    getString(in, temp.lastName);
-    getString(in, temp.username);
-    getString(in, temp.email);
-    getString(in, temp.password);
-    getString(in, temp.phone);
-    if(isEOF) strcpy(temp.firstName, "END");
-    return temp;
-}
-void printUserInfo(User var) {
-    char name[StrLen];
-    strcpy(name, var.firstName);
-    strcat(name, " ");
-    strcat(name, var.lastName);
-
-    // printf("First Name: %s\n", var.firstName);
-    // printf("Last Name: %s\n", var.lastName);
-    printf("Name: %s\n", name);
-    printf("Username: %s\n", var.username);
-    printf("Email: %s\n", var.email);
-    printf("password: %s\n", var.password);
-    printf("Phone: %s\n", var.phone);
-}
-void loadData(User database[]) {
-    FILE *in = fopen("userData.txt", "r");
-    int count = 0;
-    readUser(in); // Reading Table heads as void
-
-    User temp;
-    do {
-        temp = readUser(in);
-        database[count++] = temp;
-    } while(strcmp(temp.firstName, "END")); // END of data value
-}
-
 int main(void) {
-    FILE *in = fopen("userData.txt", "r");
+    FILE *in = fopen("userData.csv", "r");
     User database[DBLen];
     loadData(database);
 
-    int i = 0;
-    while(strcmp(database[i].firstName, "END")) {
-        printUserInfo(database[i++]);
-        printf("\n");
-    }
-
-    // loadData(in);
-
-    // int accType = menu();
+    int accType = menu();
     // Prompts login based on account type selected in menu 
 
-    // switch(accType) {
-    //     case 1: 
-    //         customerPrompt();
-    //         break;
-    //     case 2: 
-    //         managerPrompt();
-    //         break;
-    //     case 3: 
-    //         adminPrompt();
-    //         break;
-    // }
+    switch(accType) {
+        case 1: 
+            customerPrompt();
+            break;
+        case 2: 
+            managerPrompt();
+            break;
+        case 3: 
+            adminPrompt();
+            break;
+    }
     
 }
