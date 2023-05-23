@@ -1,6 +1,14 @@
-    static Node user;
-    user.name = "Zaib Khan";
-    user.username = "zaibkhan";
-    user.email = "kmjahanzaib@gmail.com";
-    user.password = "123";
-    user.phone = "019";
+nt accType = menu();
+    Prompts login based on account type selected in menu 
+
+    switch(accType) {
+        case 1: 
+            customerPrompt();
+            break;
+        case 2: 
+            managerPrompt();
+            break;
+        case 3: 
+            adminPrompt();
+            break;
+    }
