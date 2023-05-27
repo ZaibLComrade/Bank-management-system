@@ -7,7 +7,7 @@
 #define PassLength 64
 #define DBLen 16
 
-typedef enum {customer, manager, admin} AccountType;
+// typedef enum {customer, manager, admin} AccountType;
 typedef struct user {
     char firstName[StrLen];
     char lastName[StrLen];
@@ -15,8 +15,13 @@ typedef struct user {
     char password[StrLen];
     char email[StrLen];
     char phone[StrLen];
-    AccountType type;
 } User;
+
+typedef struct {
+    User finalUser;
+    int type;
+    double balance;
+}
 
 // Req -> Feature that is not yet added but will be worked
 // on a future version

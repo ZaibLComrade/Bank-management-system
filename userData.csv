@@ -1,9 +1,5 @@
-First Name,Last Name,Username,Email,Password,Phone
-Klonum,David,davidsun,davidsun@gmail.com,213,5423
-Hello,World,helo,asdf,12,09
-Hola,Amigo,holamigo,holahola,3456,12345
-Isaac,Stratvert,isaacStatve,isaacfoster@gmail.com,1234,017
-Who,Knows,knowsanyone,whonows@gmail.com,123,54326
-Albus,Singh,tingatinga,tingting@gmail.com,245,234
-Voldemort,Potter,voldaPot,voldepot@gmail.com,542,809
-Zaib,Khan,zaibthegreat,kmjahanzaib@gmail.com,123,019
+First Name,Last Name,Username,Email,Password,Phone,Type,Balance
+,0.00,,,,,,1,0.00
+,0.00,,,,,,1,0.00,Zaib,438,0.00
+Khan,zaibkhan,kmjahanzaib@gmail.com,123,098,1,0,0.00
+volda,pot,voldapot,vovov,123,89,1,0.00
