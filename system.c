@@ -15,7 +15,7 @@ typedef struct user {
     char password[StrLen];
     char email[StrLen];
     char phone[StrLen];
-    AccountType type;
+    double balance;
 } User;
 
 // Req -> Feature that is not yet added but will be worked
@@ -50,6 +50,24 @@ User readUser(FILE *in) {
     getString(in, temp.email);
     getString(in, temp.password);
     getString(in, temp.phone);
+    fscanf(in, "%lf", &temp.balance);
+    if(isEOF) strcpy(temp.firstName, "END");  // End of file info
+    // If the file has reached end, firstName of struct temp will
+    // contain the string "END"
+    return temp;
+}
+User readHead(FILE *in) {
+    // Reads head of table
+    User temp;
+    int isEOF = 0;
+    isEOF = getString(in, temp.firstName);
+    getString(in, temp.lastName);
+    getString(in, temp.username);
+    getString(in, temp.email);
+    getString(in, temp.password);
+    getString(in, temp.phone);
+    char voidString[StrLen];
+    getString(in, voidString);
     if(isEOF) strcpy(temp.firstName, "END");  // End of file info
     // If the file has reached end, firstName of struct temp will
     // contain the string "END"
@@ -68,12 +86,13 @@ void printUserInfo(User var) {
     printf("Email: %s\n", var.email);
     printf("password: %s\n", var.password);
     printf("Phone: %s\n", var.phone);
+    printf("Balance: %0.2lf$\n", var.balance);
 }
 void loadData(User database[]) {
     // Loads database from file into stack memory
     FILE *in = fopen("userData.csv", "r");
     int count = 0;
-    readUser(in); // Reading Table heads as void
+    readHead(in); // Reading Table heads as void
 
     User temp;
     do {
@@ -82,7 +101,6 @@ void loadData(User database[]) {
     } while(strcmp(temp.firstName, "END")); // END of data value
 }
 void sortDatabase(User database[]) {
-    loadData(database); // Reloads Database before sorting
     // Sorts the database using insertion sort
     int count = 0;
     int cmp;
@@ -105,7 +123,7 @@ void sortDatabase(User database[]) {
 
     // Rewriting the database with sorted data
     FILE *out = fopen("userData.csv", "w");
-    fprintf(out, "First Name,Last Name,Username,Email,Password,Phone");
+    fprintf(out, "First Name,Last Name,Username,Email,Password,Phone,Balance");
     for(int i = 0; i < count; i++) {
         fprintf(out, "\n");
         fprintf(out, "%s,", database[i].firstName);
@@ -113,7 +131,8 @@ void sortDatabase(User database[]) {
         fprintf(out, "%s,", database[i].username);
         fprintf(out, "%s,", database[i].email);
         fprintf(out, "%s,", database[i].password);
-        fprintf(out, "%s", database[i].phone);
+        fprintf(out, "%s,", database[i].phone);
+        fprintf(out, "%0.2lf", database[i].balance);
     }
     fclose(out);
 }
@@ -138,6 +157,31 @@ int binarySearch(User database[], char key[]) {
     return -1; // If key doesn't match any entry
 }
 
+// Dashboard functions
+void changePass(User temp) {
+    int notMatch;
+    do {
+        printf("New password: ");
+        scanf("%s", temp.password);
+        char tempPass[PassLength];
+        printf("Repeat password: ");
+        scanf("%s", tempPass);
+        notMatch = strcmp(temp.password, tempPass);
+        if(notMatch) printf("Passwords don't match. Please try again\n");
+    } while(notMatch);
+    printf("Password Changed Successfully\n\n");
+    int index = binarySearch(database, temp.username);
+    strcpy(database[index].password, temp.password);
+    sortDatabase(database);
+}
+void deposit(User temp) {
+    double amount = 0;
+    printf("Enter amount: ");
+    scanf("%lf", &amount);
+    int index = binarySearch(database, temp.username);
+    database[index].balance += amount;
+    sortDatabase(database);
+}
 
 // UI functions
 int menu(void) {
@@ -163,7 +207,7 @@ int menu(void) {
 void createAccount() {
     // Initializing varaibles
     User temp;
-
+    temp.balance = 0;
     // Prompt user for details
     printf("First name: ");
     scanf("%s", temp.firstName);
@@ -205,7 +249,7 @@ void createAccount() {
     if(appendMode) out = fopen("userData.csv", "a");
     else out = fopen("userData.csv", "w");
     if(!appendMode) {
-        fprintf(out, "First Name,Last Name,Username,Email,Password,Phone");
+        fprintf(out, "First Name,Last Name,Username,Email,Password,Phone,Balance");
     }
     fprintf(out, "\n");
     fprintf(out, "%s,", temp.firstName);
@@ -214,12 +258,16 @@ void createAccount() {
     fprintf(out, "%s,", temp.email);
     fprintf(out, "%s,", temp.password);
     fprintf(out, "%s", temp.phone);
+    fprintf(out, "%0.2lf", temp.balance);
     fclose(out);
 
     sortDatabase(database);
     // Reloads database everytime a new Account is created
 }
-void loginPage() {
+User loginPage() {
+    // Returns user info if logged in
+    User temp;
+
     char username[StrLen];
     // Req: Username validation
     char password[PassLength];
@@ -238,9 +286,11 @@ void loginPage() {
         printf("Enter Password: ");
         scanf("%s", password);
         printf("\n");
-        int gainedAccess = 0;
         int cmpPass = strcmp(password, database[profileIndex].password);
-        if(cmpPass == 0) printf("Gained Access!\n");
+        if(cmpPass == 0) {
+            printf("Gained Access!\n");
+            temp = database[profileIndex];
+        }
         else {
             printf("Access denied!\n");
             loginPage();
@@ -267,15 +317,30 @@ void loginPage() {
     }
 
     login_or_create();
+    return temp;
 }
 
 // Dashboards
 void customerPrompt(void) {
+    User loggedInUser;
     // Under Construction
-    void customerDashboard() {
-        printf("Hello /User/\n");
-        printf("Current balance:\n");
+    void customerDashboard(User temp) {
+        char name[StrLen];
+        strcpy(name, temp.firstName);
+        strcat(name, " ");
+        strcat(name, temp.lastName);
+        char greetings[] = "Hello, ";
+        strcat(greetings, name);
+        char underLine[StrLen];
+        strcpy(underLine, greetings);
+        memset(underLine, '=', strlen(greetings));
+        // Concatead first and last name and created dynamic underline
+
+        printf("%s\n", greetings);
+        printf("%s\n", underLine);
+        printf("Current balance: %0.2lf$\n", loggedInUser.balance);
         printf("\n");
+        int chosen;
         printf("Options:\n");
         printf("1. Change Password\n");
         printf("2. Deposit\n");
@@ -285,17 +350,46 @@ void customerPrompt(void) {
         printf("6. Update Account Details\n");
         printf("7. Logout\n");
         printf("0. Exit\n");
-        printf("\n");
+        printf("Choose: ");
+        scanf("%d", &chosen);
+        switch(chosen) {
+            case 1: 
+                changePass(loggedInUser);
+                customerDashboard(loggedInUser);
+            break;
+            case 2:
+                deposit(loggedInUser);
+                customerDashboard(loggedInUser);
+                // Bugged
+            case 0:
+                exit(1);
+            break;
+        }
     }
     printf("Customer login\n");
     printf("==============\n");
-    loginPage();
-    customerDashboard();
+    loggedInUser = loginPage();
+    customerDashboard(loggedInUser);
 }
 void managerPrompt(void) {
+    User loggedInUser;
+    
     // Under Construction
-    void managerDashboard() {
-        printf("Hello /Manager/\n");
+    void managerDashboard(User temp) {
+        char name[StrLen];
+        strcpy(name, temp.firstName);
+        strcat(name, " ");
+        strcat(name, temp.lastName);
+        char greetings[] = "Hello, ";
+        strcat(greetings, name);
+        char underLine[StrLen];
+        strcpy(underLine, greetings);
+        memset(underLine, '=', strlen(greetings));
+        // Concatead first and last name and created dynamic underline
+
+        printf("%s\n", greetings);
+        printf("%s\n", underLine);
+        printf("Current balance: %0.2lf$\n", loggedInUser.balance);
         printf("Options:\n");
         printf("\n");
         printf("1. View Customer Details\n");
@@ -311,12 +405,26 @@ void managerPrompt(void) {
     printf("Manager login\n");
     printf("=============\n");
     loginPage();
-    managerDashboard();
+    managerDashboard(loggedInUser);
 }
 void adminPrompt(void) {
+    User loggedInUser;
     // Under Construction
-    void adminDashboard() {
-        printf("Hello /Admin/\n");
+    void adminDashboard(User temp) {
+        char name[StrLen];
+        strcpy(name, temp.firstName);
+        strcat(name, " ");
+        strcat(name, temp.lastName);
+        char greetings[] = "Hello, ";
+        strcat(greetings, name);
+        char underLine[StrLen];
+        strcpy(underLine, greetings);
+        memset(underLine, '=', strlen(greetings));
+        // Concatead first and last name and created dynamic underline
+
+        printf("%s\n", greetings);
+        printf("%s\n", underLine);
+        printf("Current balance: %0.2lf$\n", loggedInUser.balance);
         printf("Options:\n");
         printf("\n");
         printf("1. View Branch Details\n");
@@ -332,35 +440,35 @@ void adminPrompt(void) {
     printf("Admin login\n");
     printf("===========\n");
     loginPage();
-    adminDashboard();
+    adminDashboard(loggedInUser);
 }
 
-
 int main(void) {
-    // loadData(database);
-
+    // printf("Ran\n");
+    loadData(database);
     sortDatabase(database);
     
+    
     // int count = 0;
-    // while(count < 6) {
+    // while(strcmp(database[count].firstName, "END")) {
     //     printUserInfo(database[count++]);
     //     printf("\n");
     // }
 
 
-    int accType = menu();
-    // Prompts login based on account type selected in menu 
+    // int accType = menu();
+    // // Prompts login based on account type selected in menu 
 
-    switch(accType) {
-        case 1: 
+    // switch(accType) {
+    //     case 1: 
             customerPrompt();
-            break;
-        case 2: 
-            managerPrompt();
-            break;
-        case 3: 
-            adminPrompt();
-            break;
-    }
+    //         break;
+    //     case 2: 
+    //         managerPrompt();
+    //         break;
+    //     case 3: 
+    //         adminPrompt();
+    //         break;
+    // }
     
 }
