@@ -39,7 +39,7 @@ typedef struct user {
 User database[DBLen];
 char fileExtension[] = "TLog.dat"; // Suffix of transaction log file
 char centralDatabase[] = "CentralDatabase.dat"; // Transaction histroy database
-
+char userData[] = "userData.dat";
 /*
     Database notes:
     If added or removed a column of data, readUser(), readhead(),
@@ -123,9 +123,13 @@ void printUserInfo(User var) {
     printf("Balance: %0.2lf$\n", var.balance);
     printf("\n");
 }
-void loadData(User database[]) {
+int loadData(User database[]) {
     // Loads database from file into stack memory
-    FILE *in = fopen("userData.csv", "r");
+    FILE *in = fopen(userData, "r");
+    if(in == NULL) {
+        // File not found
+        return 0;
+    }
     int count = 0;
     readHead(in); // Reading Table heads as void
 
@@ -134,6 +138,7 @@ void loadData(User database[]) {
         temp = readUser(in);
         database[count++] = temp;
     } while(strcmp(temp.firstName, "END")); // END of data value
+    return 1; // Successfully loaded
 }
 void sortDatabase(User database[]) {
     // Sorts the database using insertion sort
@@ -157,7 +162,7 @@ void sortDatabase(User database[]) {
     }
 
     // Rewriting the database with sorted data
-    FILE *out = fopen("userData.csv", "w");
+    FILE *out = fopen(userData, "w");
     fprintf(out, "First Name,Last Name,Username,Email,Password,Phone,Balance");
     for(int i = 0; i < count; i++) {
         fprintf(out, "\n");
@@ -319,6 +324,7 @@ void sendMoney(int index) {
 
 // UI functions
 void createAccount() {
+    printf("----SIGN UP----\n");
     // Initializing varaibles
     User temp;
     temp.balance = 0;
@@ -347,41 +353,36 @@ void createAccount() {
 
     scanf("%s", temp.phone);
 
-    FILE *check = fopen("userData.csv", "r");
-    int appendMode = 0;
-    char ch;
-    /* 
-        Check if file is pre-exixsted
-        If file exists, open file in append mode
-        If not, create file and open in write mode
-        Creating new file will add table header at the beginning of file 
-    */
-    if((ch = getc(check)) != EOF) appendMode = 1;
-    fclose(check);
-
     FILE *out;
-    if(appendMode) out = fopen("userData.csv", "a");
-    else out = fopen("userData.csv", "w");
+    out = fopen(userData, "r");
+    char ch;
+    bool appendMode = true;
+    if(out == NULL || (ch = getc(out)) == EOF) appendMode = false;
     if(!appendMode) {
+        out = fopen(userData, "w");
         fprintf(out, "First Name,Last Name,Username,Email,Password,Phone,Balance");
-    }
+    } else out = fopen(userData, "a");
     fprintf(out, "\n");
     fprintf(out, "%s,", temp.firstName);
     fprintf(out, "%s,", temp.lastName);
     fprintf(out, "%s,", temp.username);
     fprintf(out, "%s,", temp.email);
     fprintf(out, "%s,", temp.password);
-    fprintf(out, "%s", temp.phone);
+    fprintf(out, "%s,", temp.phone);
     fprintf(out, "%0.2lf", temp.balance);
     fclose(out);
 
+    loadData(database);
     sortDatabase(database);
-    printf("Account created successfully");
+    loadData(database);
+
+    printf("Account created successfully\n");
     termicont();
     clrscr();
     // Reloads database everytime a new Account is created
 }
 int loginPage() {
+    clrscr(); // Refresh console
     // Returns user index if logged in
     int profileIndex;
 
@@ -393,11 +394,13 @@ int loginPage() {
 
     // Prompts for username and passord
     void login() {
+        printf("----LOGIN----\n");
         printf("Enter Username: ");
         scanf("%s", username);
         profileIndex = binarySearch(database, username);
         if(profileIndex == -1) { // If account not found
             printf("Account not found. Try again.\n");
+            termicont();
             loginPage(); // Go back to login page
         }
         printf("Enter Password: ");
@@ -410,6 +413,7 @@ int loginPage() {
         }
         else {
             printf("Access denied!\n");
+            termicont();
             loginPage();
         }
         printf("\n");
@@ -419,6 +423,12 @@ int loginPage() {
     // Asks whether account exists
     void login_or_create() {
         int exist;
+        printf("++++++++++++++++++++++++++++++\n");
+        printf("====Bank management System====\n");
+        printf("++++++++++++++++++++++++++++++\n");
+        printf("\n\n");
+        printf("Customer login\n");
+        printf("==============\n");
         printf("1. Sign Up\n");
         printf("2. Login\n");
         printf("0. Exit\n");
@@ -439,8 +449,8 @@ int loginPage() {
 }
 
 int main(void) {
-    loadData(database);
-    sortDatabase(database);
+    int successfully_loaded = loadData(database);
+    if(successfully_loaded)sortDatabase(database);
     
     // int count = 0;
     // while(strcmp(database[count].firstName, "END")) {
@@ -525,12 +535,6 @@ int main(void) {
         clrscr();
         customerDashboard(dbIndex);
     }
-    printf("++++++++++++++++++++++++++++++\n");
-    printf("====Bank management System====\n");
-    printf("++++++++++++++++++++++++++++++\n");
-    printf("\n\n");
-    printf("Customer login\n");
-    printf("==============\n");
     userIndex = loginPage();
     customerDashboard(userIndex);
 }
