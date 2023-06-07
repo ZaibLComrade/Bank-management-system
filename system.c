@@ -37,6 +37,8 @@ typedef struct user {
     Future version may have dynamically allocated database.
 */
 User database[DBLen];
+char fileExtension[] = "TLog.dat"; // Suffix of transaction log file
+char centralDatabase[] = "CentralDatabase.dat"; // Transaction histroy database
 
 /*
     Database notes:
@@ -190,45 +192,46 @@ int binarySearch(User database[], char key[]) {
     return -1; // If key doesn't match any entry
 }
 
+// New Database functions
+
+
 // Dashboard functions
-void changePass(User temp) {
+void changePass(int index) {
     int notMatch;
+    char newPass[PassLength];
     do {
         printf("New password: ");
-        scanf("%s", temp.password);
+        scanf("%s", newPass);
         char tempPass[PassLength];
         printf("Repeat password: ");
         scanf("%s", tempPass);
-        notMatch = strcmp(temp.password, tempPass);
+        notMatch = strcmp(newPass, tempPass);
         if(notMatch) printf("Passwords don't match. Please try again\n");
     } while(notMatch);
+    strcpy(database[index].password, newPass);
     printf("Password Changed Successfully\n\n");
-    int index = binarySearch(database, temp.username);
-    strcpy(database[index].password, temp.password);
     sortDatabase(database);
 }
-void deposit(User temp) {
+void deposit(int index) {
     double amount = 0;
     printf("----DEPOSIT----\n");
     printf("Enter deposit amount: ");
     scanf("%lf", &amount);
-    int index = binarySearch(database, temp.username);
     database[index].balance += amount;
+
+    //test
+    // temp -> balance += amount;
+
     sortDatabase(database); // Writes to original database
     loadData(database); // Refreshes loaded database
 
-    // Debug
-    printUserInfo(temp);
-    printUserInfo(database[index]);
-
     printf("Amount deposited successfully\n\n");
 }
-void withdraw(User temp) {
+void withdraw(int index) {
     double amount = 0;
     printf("----WITHDRAW----\n");
     printf("Enter withdraw amount: ");
     scanf("%lf", &amount);
-    int index = binarySearch(database, temp.username);
     if(database[index].balance >= amount) {
         database[index].balance -= amount;
         printf("Amount withdrawn successfully\n");
@@ -238,41 +241,80 @@ void withdraw(User temp) {
     }
     printf("\n");
 }
-void sendMoney(User temp) {
+void sendMoney(int index) {
+
+    User temp = database[index];
     char username[StrLen];
+    int rcvIndex;
     double amount;
     printf("Enter email of receiver: ");
     scanf("%s", username);
+    rcvIndex = binarySearch(database, username);
+    if(rcvIndex == -1) {
+        printf("User not found\n");
+        return;
+    }
     printf("Enter amount to be transacted: ");
     scanf("%lf", &amount);
-    // termicont();
+    if(amount > database[index].balance) {
+        printf("Not sufficient money\n");
+        return;
+    }
+    termicont();
+
+    void fprintTransaction(FILE *ptr) {
+        fprintf(ptr, "%s,", temp.username);
+        fprintf(ptr, "%0.2lf,", amount);
+        fprintf(ptr, "%s,", username);
+        fprintf(ptr, "Pending");
+        fprintf(ptr, "\n");
+    }
     
     FILE *fp;
-    char fileName[StrLen] = "";
-    strcpy(fileName, temp.username);
-    strcat(fileName, "TLog.dat");
-
-    // debug
-    printf("Debug:\n");
-    printf("FileName: %s\n", fileName);
-
-    fp = fopen(fileName, "a");
-    int appendMode = 0;
-    char ch;
-    if((ch = getc(fp)) == EOF) appendMode = 1;
-
-    printf("appendMode: %d\n", appendMode);
     
-    if(appendMode == 0) {
-        printf("Sender,Reciver,Reciever,State\n");
-    } else{
+    char fileName[StrLen];
+    char headerString[126] = "Sender,Reciver,Reciever,State";
+
+    strcpy(fileName, temp.username);
+    strcat(fileName, fileExtension);
+    fp = fopen(fileName, "r");
+    bool appendMode = true;
+    char ch;
+    if(fp == NULL || (ch = getc(fp)) == EOF) appendMode = false;
+    if(!appendMode) {
+        fp = fopen(fileName, "w");
+        fprintf(fp, "%s\n", headerString);
+    } else {
         fp = fopen(fileName, "a");
-        fprintf(fp, "%s,", temp.username);
-        fprintf(fp, "%0.2lf,", amount);
-        fprintf(fp, "%s,", username);
-        fprintf(fp, "Pending");
     }
+    fprintTransaction(fp);
     fclose(fp);
+
+    // Adding data to central database
+    strcpy(fileName, centralDatabase);
+    FILE *mainDB = fopen(fileName, "a");
+    fprintTransaction(mainDB);
+    fclose(mainDB);
+
+    database[index].balance -= amount;
+    sortDatabase(database); // Write Changes
+
+    // Transacting to reciever transaction log
+    strcpy(fileName, username);
+    strcat(fileName, fileExtension);
+    FILE *rcv = fopen(fileName, "r");
+    appendMode = true;
+    if(rcv == NULL || (ch = getc(rcv)) == EOF) appendMode = false;
+
+    if(!appendMode) {
+        rcv = fopen(fileName, "w");
+        fprintf(rcv, "%s\n", headerString);
+    } else {
+        rcv = fopen(fileName, "a");
+    }
+    fprintTransaction(rcv);
+    fclose(rcv);
+    printf("Transaction Pending\n");
 }
 
 // UI functions
@@ -442,7 +484,7 @@ int main(void) {
         scanf("%d", &chosen);
         switch(chosen) {
             case 1: 
-                deposit(loggedInUser);    
+                deposit(dbIndex);    
                 /*
                     Bug: current balance output remains same
                     even after currency is deposited succesfully
@@ -452,10 +494,10 @@ int main(void) {
                 */
             break;
             case 2:
-                withdraw(loggedInUser);
+                withdraw(dbIndex);
             break;
             case 3:
-                sendMoney(loggedInUser);
+                sendMoney(dbIndex);
             break;
             case 4:
                 // Under Construction
@@ -473,7 +515,7 @@ int main(void) {
                 userIndex = loginPage();
             break;
             case 8: 
-                changePass(loggedInUser);
+                changePass(dbIndex);
             break;
             case 0:
                 exit(1);
