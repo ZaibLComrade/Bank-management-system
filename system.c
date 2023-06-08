@@ -30,6 +30,7 @@ typedef struct user {
     char email[StrLen];
     char phone[StrLen];
     double balance;
+    int notification;
 } User;
 
 /*
@@ -76,6 +77,8 @@ User readUser(FILE *in) {
     getString(in, temp.password);
     getString(in, temp.phone);
     fscanf(in, "%lf", &temp.balance);
+    if(!isEOF) char ch = getc(in); // Reads comma
+    fscanf(in, "%d", &temp.notification);
     if(isEOF) strcpy(temp.firstName, "END");  // End of file info
     // If the file has reached end, firstName of struct temp will
     // contain the string "END"
@@ -93,7 +96,8 @@ User readHead(FILE *in) {
     getString(in, temp.password);
     getString(in, temp.phone);
     char voidString[StrLen];
-    getString(in, voidString); 
+    getString(in, voidString);  // Reads "Balance" as void
+    getString(in, voidString); // Reads "Notificaiton" as void
     /*
         Reads the head "balance" as void string since "balance"
         itself is a string but columnt contains double type
@@ -121,6 +125,7 @@ void printUserInfo(User var) {
     printf("password: %s\n", var.password);
     printf("Phone: %s\n", var.phone);
     printf("Balance: %0.2lf$\n", var.balance);
+    printf("Notification: %d\n", var.notification);
     printf("\n");
 }
 int loadData(User database[]) {
@@ -163,7 +168,7 @@ void sortDatabase(User database[]) {
 
     // Rewriting the database with sorted data
     FILE *out = fopen(userData, "w");
-    fprintf(out, "First Name,Last Name,Username,Email,Password,Phone,Balance");
+    fprintf(out, "First Name,Last Name,Username,Email,Password,Phone,Balance,Notification");
     for(int i = 0; i < count; i++) {
         fprintf(out, "\n");
         fprintf(out, "%s,", database[i].firstName);
@@ -172,7 +177,8 @@ void sortDatabase(User database[]) {
         fprintf(out, "%s,", database[i].email);
         fprintf(out, "%s,", database[i].password);
         fprintf(out, "%s,", database[i].phone);
-        fprintf(out, "%0.2lf", database[i].balance);
+        fprintf(out, "%0.2lf,", database[i].balance);
+        fprintf(out, "%d", database[i].notification);
     }
     fclose(out);
 }
@@ -328,6 +334,7 @@ void createAccount() {
     // Initializing varaibles
     User temp;
     temp.balance = 0;
+    temp.notification = 0;
     // Prompt user for details
     printf("First name: ");
     scanf("%s", temp.firstName);
@@ -360,7 +367,7 @@ void createAccount() {
     if(out == NULL || (ch = getc(out)) == EOF) appendMode = false;
     if(!appendMode) {
         out = fopen(userData, "w");
-        fprintf(out, "First Name,Last Name,Username,Email,Password,Phone,Balance");
+        fprintf(out, "First Name,Last Name,Username,Email,Password,Phone,Balance,Notificaion");
     } else out = fopen(userData, "a");
     fprintf(out, "\n");
     fprintf(out, "%s,", temp.firstName);
@@ -369,7 +376,8 @@ void createAccount() {
     fprintf(out, "%s,", temp.email);
     fprintf(out, "%s,", temp.password);
     fprintf(out, "%s,", temp.phone);
-    fprintf(out, "%0.2lf", temp.balance);
+    fprintf(out, "%0.2lf,", temp.balance);
+    fprintf(out, "%d", temp.notification);
     fclose(out);
 
     loadData(database);
@@ -450,7 +458,7 @@ int loginPage() {
 
 int main(void) {
     int successfully_loaded = loadData(database);
-    if(successfully_loaded)sortDatabase(database);
+    if(successfully_loaded) sortDatabase(database);
     
     // int count = 0;
     // while(strcmp(database[count].firstName, "END")) {
