@@ -77,12 +77,12 @@ User readUser(FILE *in) {
     getString(in, temp.password);
     getString(in, temp.phone);
     fscanf(in, "%lf", &temp.balance);
-    if(!isEOF) char ch = getc(in); // Reads comma
+    char ch;
+    if(!isEOF) ch = getc(in); // Reads comma
     fscanf(in, "%d", &temp.notification);
     if(isEOF) strcpy(temp.firstName, "END");  // End of file info
     // If the file has reached end, firstName of struct temp will
     // contain the string "END"
-
     return temp;
 }
 User readHead(FILE *in) {
@@ -380,9 +380,9 @@ void createAccount() {
     fprintf(out, "%d", temp.notification);
     fclose(out);
 
-    loadData(database);
-    sortDatabase(database);
-    loadData(database);
+    loadData(database); // Loads database with changes
+    sortDatabase(database); // Sorts database
+    loadData(database); // Loads sorted database
 
     printf("Account created successfully\n");
     termicont();
@@ -401,12 +401,12 @@ int loginPage() {
     // Req: Password validity  
 
     // Prompts for username and passord
-    void login() {
+    int login() {
         printf("----LOGIN----\n");
         printf("Enter Username: ");
         scanf("%s", username);
-        profileIndex = binarySearch(database, username);
-        if(profileIndex == -1) { // If account not found
+        int pfIndex = binarySearch(database, username);
+        if(pfIndex == -1) { // If account not found
             printf("Account not found. Try again.\n");
             termicont();
             loginPage(); // Go back to login page
@@ -414,10 +414,10 @@ int loginPage() {
         printf("Enter Password: ");
         scanf("%s", password);
         printf("\n");
-        int cmpPass = strcmp(password, database[profileIndex].password);
+        int cmpPass = strcmp(password, database[pfIndex].password);
         if(cmpPass == 0) {
             printf("Gained Access!\n");
-            termicont();
+            return pfIndex;
         }
         else {
             printf("Access denied!\n");
@@ -429,10 +429,10 @@ int loginPage() {
     // If account is not created
     
     // Asks whether account exists
-    void login_or_create() {
+    int login_or_create() {
         int exist;
         printf("++++++++++++++++++++++++++++++\n");
-        printf("====Bank management System====\n");
+        printf("====Bank Management System====\n");
         printf("++++++++++++++++++++++++++++++\n");
         printf("\n\n");
         printf("Customer login\n");
@@ -445,21 +445,24 @@ int loginPage() {
         if(!exist) exit(1);
         exist -= 1; //Converting to boolean value
         printf("\n");
-        if(exist) login();
+        if(exist) {
+            int pIndex = login();
+            termicont();
+            return pIndex;
+        }
         else {
             createAccount();
             loginPage();
         }
     }
 
-    login_or_create();
+    profileIndex = login_or_create();
     return profileIndex;
 }
 
 int main(void) {
     int successfully_loaded = loadData(database);
     if(successfully_loaded) sortDatabase(database);
-    
     // int count = 0;
     // while(strcmp(database[count].firstName, "END")) {
     //     printUserInfo(database[count++]);
@@ -544,5 +547,6 @@ int main(void) {
         customerDashboard(dbIndex);
     }
     userIndex = loginPage();
+    printf("userIndex: %d\n", userIndex);
     customerDashboard(userIndex);
 }
