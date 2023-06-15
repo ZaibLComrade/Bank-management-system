@@ -6,6 +6,7 @@
 #define StrLen 32
 #define PassLength 64
 #define DBLen 16
+#define logLen 126
 typedef enum {false, true} bool;
 
 // Terminal functions
@@ -32,6 +33,13 @@ typedef struct user {
     double balance;
     int notification;
 } User;
+typedef struct {
+    char sender[StrLen];
+    double amount;
+    char reciever[StrLen];
+    char state[StrLen];
+    int sl;
+} Transaction;
 
 /*
     This database is implemented using a static array.
@@ -202,11 +210,108 @@ int binarySearch(User database[], char key[]) {
     }
     return -1; // If key doesn't match any entry
 }
+Transaction readTransaction(FILE *tr, bool isHeader) {
+    // Reads transaction log file
+    Transaction temp;
+    bool isEOF;
+
+    isEOF = getString(tr, temp.sender);
+    if(isHeader) {
+        char voidString[StrLen];
+        getString(tr, voidString); // Reads "Amount" header as void
+    } else {
+        fscanf(tr, "%lf", &temp.amount);
+        char ch;
+        if(!isEOF) ch = getc(tr); // Reads comma after amount
+    }
+    getString(tr, temp.reciever);
+    getString(tr, temp.state);
+
+    if(isEOF) strcpy(temp.sender, "END"); // End of data value
+    if(!isHeader) return temp; // Returns transaction data;
+}
+double loadTransaction(char fileName[], int userIndex) {
+    // Returns amount of recieved money
+
+    FILE *trLog = fopen(fileName, "r");
+    Transaction log[logLen];
+    int slCount = 1; // Reciever serial count
+    readTransaction(trLog, true);
+    printf("SL. Sender   Reciever   Amount   Status\n");
+    log[slCount] = readTransaction(trLog, false);
+    int cmp = strcmp(log[slCount].sender, "END");
+    while(cmp) {
+        // Reads ans writes to terminal at the same time
+
+        log[slCount].sl = slCount; // Serial no.
+        printf("%2d.", log[slCount].sl);
+        printf("%5s", log[slCount].sender);
+        printf("%13s", log[slCount].reciever);
+        printf("%9.2lf$", log[slCount].amount);
+        printf("%10s", log[slCount].state);
+        printf("\n");
+        log[++slCount] = readTransaction(trLog, false);
+        cmp = strcmp(log[slCount].sender, "END");
+    }
+
+    int sl; // Chosen to interact
+    printf("Choose transaction (0 to exit): ");
+    scanf("%d", &sl);
+    if(!sl) return 0; // Exit function
+    
+    void writeTransaction() {
+        // Writes changes to log file
+        trLog = fopen(fileName, "w");
+        fprintf(trLog, "Sender,amount,Reciever,State\n");
+        for(int i = 1; i < slCount; i++) {
+            fprintf(trLog, "%s,", log[i].sender);
+            fprintf(trLog, "%0.2lf,", log[i].amount);
+            fprintf(trLog, "%s,", log[i].reciever);
+            fprintf(trLog, "%s", log[i].state);
+            fprintf(trLog, "\n");
+        }
+    }
+
+    // Operations
+    int op;
+    printf("1. Recieve\n");
+    printf("2. Delete\n");
+    printf("0. Exit\n");
+    printf("Choose operation: ");
+    scanf("%d", &op);
+    double holdAmount = 0; // Amount to be returned
+    switch(op) {
+        case 1:
+            if(!strcmp(log[sl].state, "Pending")
+            && strcmp(log[sl].sender, database[userIndex].username)) {
+                holdAmount = log[sl].amount;
+            }
+            if(!strcmp(log[sl].state, "Recieved")) {
+                printf("Money already recieved\n");
+            }
+            strcpy(log[sl].state, "Recieved");
+            writeTransaction();
+
+            /*
+                Future version feature: Send notification
+                and recieve status to sender
+            */
+        break;
+        case 2:
+            printf("Note: *--Function Under Consideration--*");
+        break;
+        case 0:
+            return 0;
+        break;
+    }
+    fclose(trLog);
+    return holdAmount;
+}
 
 // New Database functions
 
 
-// Dashboard functions
+// UI functions
 void changePass(int index) {
     int notMatch;
     char newPass[PassLength];
@@ -256,9 +361,11 @@ void sendMoney(int index) {
 
     User temp = database[index];
     char username[StrLen];
-    int rcvIndex;
+    int rcvIndex;  // To access reciver's data
     double amount;
-    printf("Enter email of receiver: ");
+
+    // Collecting information
+    printf("Enter username of receiver: ");
     scanf("%s", username);
     rcvIndex = binarySearch(database, username);
     if(rcvIndex == -1) {
@@ -273,6 +380,7 @@ void sendMoney(int index) {
     }
     termicont();
 
+    // Function to write transaction log
     void fprintTransaction(FILE *ptr) {
         fprintf(ptr, "%s,", temp.username);
         fprintf(ptr, "%0.2lf,", amount);
@@ -284,8 +392,9 @@ void sendMoney(int index) {
     FILE *fp;
     
     char fileName[StrLen];
-    char headerString[126] = "Sender,Reciver,Reciever,State";
+    char headerString[126] = "Sender,Amount,Reciever,State";
 
+    // Sender's log
     strcpy(fileName, temp.username);
     strcat(fileName, fileExtension);
     fp = fopen(fileName, "r");
@@ -308,6 +417,7 @@ void sendMoney(int index) {
     fclose(mainDB);
 
     database[index].balance -= amount;
+    database[rcvIndex].notification++; // Notifying user of new transaction
     sortDatabase(database); // Write Changes
 
     // Transacting to reciever transaction log
@@ -327,8 +437,26 @@ void sendMoney(int index) {
     fclose(rcv);
     printf("Transaction Pending\n");
 }
+void notification(int index) {
+    database[index].notification = 0;
+    FILE *fp;
+    char fileName[StrLen];
+    strcpy(fileName, database[index].username);
+    strcat(fileName, fileExtension);
 
-// UI functions
+    // Opening user transaction log file
+    fp = fopen(fileName, "r");
+    if(fp == NULL) {
+        printf("Error: Transaction log not found\n");
+        return;
+    }
+    double recievedAmount = loadTransaction(fileName, index);
+    database[index].balance += recievedAmount;
+
+    sortDatabase(database); // Write changes
+}
+
+// System functions
 void createAccount() {
     printf("----SIGN UP----\n");
     // Initializing varaibles
@@ -421,8 +549,8 @@ int loginPage() {
         }
         else {
             printf("Access denied!\n");
-            termicont();
-            loginPage();
+            pfIndex = loginPage();
+            return pfIndex;
         }
         printf("\n");
     }
@@ -495,7 +623,7 @@ int main(void) {
         printf("1. Deposit\n");
         printf("2. Withdraw\n");
         printf("3. Send Money\n");
-        printf("4. Notifications\n");
+        printf("4. Notifications (%d)\n", loggedInUser.notification);
         printf("5. View Transaction History\n");
         printf("6. Update Account Details\n");
         printf("7. Logout\n");
@@ -506,13 +634,6 @@ int main(void) {
         switch(chosen) {
             case 1: 
                 deposit(dbIndex);    
-                /*
-                    Bug: current balance output remains same
-                    even after currency is deposited succesfully
-                    Changes take place after program complete
-                    executing. In other words, Changes are 
-                    written into database when programs exits.
-                */
             break;
             case 2:
                 withdraw(dbIndex);
@@ -521,7 +642,7 @@ int main(void) {
                 sendMoney(dbIndex);
             break;
             case 4:
-                // Under Construction
+                notification(dbIndex);
             break;
             case 5: 
                 // Under Construction
@@ -534,6 +655,7 @@ int main(void) {
                 termicont();
                 clrscr();
                 userIndex = loginPage();
+                customerDashboard(userIndex);
             break;
             case 8: 
                 changePass(dbIndex);
@@ -547,6 +669,5 @@ int main(void) {
         customerDashboard(dbIndex);
     }
     userIndex = loginPage();
-    printf("userIndex: %d\n", userIndex);
     customerDashboard(userIndex);
 }
