@@ -46,9 +46,9 @@ typedef struct {
     Future version may have dynamically allocated database.
 */
 User database[DBLen];
-char fileExtension[] = "TLog.dat"; // Suffix of transaction log file
-char centralDatabase[] = "CentralDatabase.dat"; // Transaction histroy database
-char userData[] = "userData.dat";
+char fileExtension[] = "TLog.log"; // Suffix of transaction log file
+char centralDatabase[] = "CentralDatabase.log"; // Transaction histroy database
+char userData[] = "userData.log";
 /*
     Database notes:
     If added or removed a column of data, readUser(), readhead(),
